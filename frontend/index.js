@@ -9,8 +9,17 @@ async function sprintChallenge5() { // Note the async keyword so you can use `aw
   // ❗ Use the variables `mentors` and `learners` to store the data.
   // ❗ Use the await keyword when using axios.
 
-  let mentors = [] // fix this
-  let learners = [] // fix this
+  let mentors = [];
+  let learners = [];
+  try {
+    const mentorsResponse = await axios.get('http://localhost:3003/api/mentors');
+    mentors = mentorsResponse.data;
+    const learnersResponse = await axios.get('http://localhost:3003/api/learners');
+    learners = learnersResponse.data;
+    console.log(learners);
+  } catch (error) {
+    console.log(error)
+  }
 
   // 👆 ==================== TASK 1 END ====================== 👆
 
@@ -23,18 +32,30 @@ async function sprintChallenge5() { // Note the async keyword so you can use `aw
   //   id: 6,
   //   fullName: "Bob Johnson",
   //   email: "bob.johnson@example.com",
-  //   mentors: [
+  //   mentors: `[
   //     "Bill Gates",
   //     "Grace Hopper"
   //   ]`
   // }
+
+  const mentorMap = {};
+  mentors.forEach(mentor => {
+    mentorMap[mentor.id] = mentor.firstName + " " + mentor.lastName;
+  });
+
+  learners = learners.map(learner => {
+    const mentorNames = learner.mentors.map(mentorId => mentorMap[mentorId]);
+    return {
+      ...learner,
+      mentors: mentorNames
+    };
+  });
 
   // 👆 ==================== TASK 2 END ====================== 👆
 
   const cardsContainer = document.querySelector('.cards')
   const info = document.querySelector('.info')
   info.textContent = 'No learner is selected'
-
 
   // 👇 ==================== TASK 3 START ==================== 👇
 
@@ -47,12 +68,42 @@ async function sprintChallenge5() { // Note the async keyword so you can use `aw
     // ❗ Fill each <li> with a mentor name, and append it to the <ul> mentorList.
     // ❗ Inspect the mock site closely to understand what the initial texts and classes look like!
 
-    const card = document.createElement('div')
-    const heading = document.createElement('h3')
-    const email = document.createElement('div')
-    const mentorsHeading = document.createElement('h4')
-    const mentorsList = document.createElement('ul')
+    const card = document.createElement('div');
+    const heading = document.createElement('h3');
+    const email = document.createElement('div');
+    const mentorsHeading = document.createElement('h4');
+    const mentorsList = document.createElement('ul');
 
+    card.classList.add('card');
+    heading.classList.add('learner-name');
+    email.classList.add('learner-email');
+    mentorsHeading.classList.add('closed');
+    mentorsList.classList.add('mentors-list');
+
+    heading.textContent = learner.fullName;
+    email.textContent = learner.email;
+    mentorsHeading.textContent = 'Mentors';
+    mentorsList.style.display = 'none';
+
+    for (let mentorName of learner.mentors) {
+      const mentorItem = document.createElement('li');
+      mentorItem.classList.add('mentor-item');
+      mentorItem.textContent = mentorName;
+      mentorsList.appendChild(mentorItem);
+    }
+    card.addEventListener('click', () => {
+      const isClosed = mentorsHeading.classList.toggle('closed');
+      if (isClosed) {
+        mentorsList.style.display = 'none';
+      } else {
+        mentorsList.style.display = 'block';
+      }
+      info.textContent = `Selected learner: ${learner.fullName}`;
+    });
+    card.appendChild(heading);
+    card.appendChild(email);
+    card.appendChild(mentorsHeading);
+    
     // 👆 ==================== TASK 3 END ====================== 👆
 
     // 👆 WORK ONLY ABOVE THIS LINE 👆
